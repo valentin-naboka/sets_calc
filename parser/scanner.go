@@ -8,6 +8,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const whitespaceErrStr string = "unexpected token %s: whitespace is expected"
+
 type Parser struct {
 	Scanner *lexer.Scanner
 }
@@ -16,86 +18,75 @@ func NewParser(s *lexer.Scanner) *Parser {
 	return &Parser{Scanner: s}
 }
 
-func (s *Parser) BuildTree() *ast.Expression {
-	return s.parseExpr()
+func (s *Parser) BuildExpression() (*ast.Expression, error) {
+	return s.parseExpr(s.Scanner.NextToken())
 }
 
-func (s *Parser) parseExpr() *ast.Expression {
-
-	token := s.Scanner.NextToken()
+func (s *Parser) parseExpr(token *lexer.Token) (*ast.Expression, error) {
 	if token.Type != lexer.LeftBracket {
-		return nil
+		return nil, errors.Errorf("unexpected token %s: '[' is expected", token.Value)
 	}
 
 	token = s.Scanner.NextToken()
 	if token.Type != lexer.Whitespace {
-		return nil
+		return nil, errors.Errorf(whitespaceErrStr, token.Value)
 	}
 
 	token = s.Scanner.NextToken()
 	if token.Type != lexer.Operator {
-		return nil
+		return nil, errors.Errorf("unexpected token %s: operator is expected", token.Value)
 	}
 	var expr ast.Expression
 
 	opType, err := s.parseOperator(token.Value)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	expr.OpType = opType
 
 	token = s.Scanner.NextToken()
 	if token.Type != lexer.Whitespace {
-		return nil
+		return nil, errors.Errorf(whitespaceErrStr, token.Value)
 	}
 
 	token = s.Scanner.NextToken()
 	if token.Type != lexer.Integer {
-		return nil
+		return nil, errors.Errorf("unexpected token %s: positive integer number is expected", token.Value)
 	}
 
 	integer, err := s.parseInteger(token.Value)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	expr.N = integer
 
 	token = s.Scanner.NextToken()
 	if token.Type != lexer.Whitespace {
-		return nil
+		return nil, errors.Errorf(whitespaceErrStr, token.Value)
 	}
 
-	for token := s.Scanner.PeekNextToken(); token.Type != lexer.RightBracket; token = s.Scanner.PeekNextToken() {
-		if token.Type == lexer.File {
-			expr.Sets = append(expr.Sets, ast.File{Name: token.Value})
-			s.Scanner.NextToken()
-		} else if token.Type == lexer.LeftBracket {
-			e := s.parseExpr()
-			if e != nil {
-				expr.Sets = append(expr.Sets, e)
-				s.Scanner.NextToken()
-			}
-		} else {
-			return nil
-		}
-
-		token = s.Scanner.NextToken()
-		//TODO: костыль
-		if token.Type != lexer.Whitespace && token.Type != lexer.RightBracket {
-			return nil
-		}
+	expr.Sets, err = s.parseSets()
+	if err != nil {
+		return nil, err
 	}
-	return &expr
+
+	return &expr, nil
 }
 
 func (s *Parser) parseInteger(i string) (ast.Int, error) {
-	//TODO: positive number
 	integer, err := strconv.Atoi(i)
-	return ast.Int(integer), err
+	if err != nil {
+		return 0, errors.Wrapf(err, "unable to convert N: %s", i)
+	}
+
+	if integer < 1 {
+		return 0, errors.Errorf("N should be positive number: %s", i)
+	}
+
+	return ast.Int(integer), nil
 }
 
-//TODO: use just string
 func (s *Parser) parseOperator(op string) (ast.Operator, error) {
 	switch op {
 	case "EQ":
@@ -107,4 +98,29 @@ func (s *Parser) parseOperator(op string) (ast.Operator, error) {
 	default:
 		return ast.Equal, errors.Errorf("unknown operator type %s", op)
 	}
+}
+
+func (s *Parser) parseSets() ([]ast.FileOrExpression, error) {
+	var sets []ast.FileOrExpression
+	for token := s.Scanner.NextToken(); token.Type != lexer.RightBracket; token = s.Scanner.NextToken() {
+		if token.Type == lexer.File {
+			sets = append(sets, ast.File{Name: token.Value})
+		} else if token.Type == lexer.LeftBracket {
+			e, err := s.parseExpr(token)
+			if err != nil {
+				return nil, err
+			}
+
+			if e != nil {
+				sets = append(sets, e)
+			}
+		} else {
+			return nil, errors.Errorf("unexpected token %s: filename or expression statement is expected", token.Value)
+		}
+
+		if s.Scanner.NextToken().Type != lexer.Whitespace {
+			return nil, errors.Errorf(whitespaceErrStr, token.Value)
+		}
+	}
+	return sets, nil
 }

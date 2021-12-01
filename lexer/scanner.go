@@ -3,167 +3,124 @@ package lexer
 
 import (
 	"bufio"
-	"fmt"
 	"io"
+	"log"
 	"strings"
 	"unicode"
 )
 
+const (
+	whitespace rune = ' '
+	eof        rune = 0
+)
+
+func isWhitespaceOrEOF(ch rune) bool {
+	return ch == whitespace || ch == eof
+}
+
 type Scanner struct {
 	r *bufio.Reader
-
-	//TODO: remove, use chanel
-	tokens   []Token
-	tokenIdx int
 }
 
 func NewScanner(r io.Reader) *Scanner {
-	return &Scanner{r: bufio.NewReader(r), tokenIdx: -1}
+	return &Scanner{r: bufio.NewReader(r)}
 }
 
 func (s *Scanner) readNext() rune {
 	ch, _, err := s.r.ReadRune()
-	if err != nil {
-		//TODO: resolve
-		return rune(0)
+	if err == io.EOF {
+		return eof
 	}
+
+	if err != nil {
+		log.Printf("unable to read next character: %s", err)
+		return eof
+	}
+
 	return ch
 }
 
-func (s *Scanner) NextToken() (t Token) {
-	s.tokenIdx++
-	return s.tokens[s.tokenIdx]
-}
-
-func (s *Scanner) PeekNextToken() (t Token) {
-	return s.tokens[s.tokenIdx+1]
-}
-
-func (s *Scanner) Scan() /*(t Token)*/ {
-
-	//TODO: resolve
-	for ch := s.readNext(); ch != 0; ch = s.readNext() {
-		switch ch {
-		case 0:
-			{
-				s.tokens = append(s.tokens, Token{EOF, ""})
-				continue
-			}
-		case '[':
-			{
-				s.tokens = append(s.tokens, Token{LeftBracket, string(ch)})
-				continue
-			}
-		case ']':
-			{
-				s.tokens = append(s.tokens, Token{RightBracket, string(ch)})
-				continue
-			}
-		case ' ':
-			{
-				s.readWhitespaces(ch)
-				continue
-			}
-		}
-
-		ok, stringBuilder := s.readDigit(ch)
-		if ok {
-			continue
-		}
-
-		if stringBuilder == nil {
-			ok, stringBuilder = s.readOperator(ch)
-			if ok {
-				continue
-			}
-		}
-
-		s.readFilename(stringBuilder)
-
-		//TODO: what do to with errors?
-		//s.tokens = append(s.tokens, Token{Error, fmt.Sprintf("unknown symbol %c", ch)})
+func (s *Scanner) NextToken() *Token {
+	ch := s.readNext()
+	switch ch {
+	case eof:
+		return &Token{EOF, ""}
+	case '[':
+		return &Token{LeftBracket, string(ch)}
+	case ']':
+		return &Token{RightBracket, string(ch)}
+	case whitespace:
+		return s.readWhitespaces(ch)
 	}
+
+	token, stringBuilder := s.readDigit(ch)
+	if token != nil {
+		return token
+	}
+
+	if stringBuilder == nil {
+		token, stringBuilder = s.readOperator(ch)
+		if token != nil {
+			return token
+		}
+	}
+
+	return s.readFilename(stringBuilder)
 }
 
-func (s *Scanner) readWhitespaces(ch rune) {
-	for ; ; ch = s.readNext() {
-		//TODO: rewrite to loop body
-		// or end of file
-		if ch != ' ' {
-			break
-		}
+func (s *Scanner) readWhitespaces(ch rune) *Token {
+	for ; isWhitespaceOrEOF(ch); ch = s.readNext() {
 	}
 	s.r.UnreadRune()
-	s.tokens = append(s.tokens, Token{Whitespace, string(' ')})
+	return &Token{Whitespace, string(whitespace)}
 }
 
-func (s *Scanner) readDigit(ch rune) (bool, *strings.Builder) {
+func (s *Scanner) readDigit(ch rune) (*Token, *strings.Builder) {
 
 	if !unicode.IsDigit(ch) {
-		return false, nil
+		return nil, nil
 	}
 
-	//TODO: optimize
 	var number strings.Builder
 	for ; unicode.IsDigit(ch); ch = s.readNext() {
 		number.WriteRune(ch)
 	}
 
-	//TODO: whitesapce const
-	if ch != ' ' {
-		return false, &number
+	if ch != whitespace {
+		return nil, &number
 	}
 
-	s.tokens = append(s.tokens, Token{Integer, number.String()})
 	s.r.UnreadRune()
-	return true, nil
+	return &Token{Integer, number.String()}, nil
 }
 
-func (s *Scanner) readOperator(ch rune) (bool, *strings.Builder) {
+func (s *Scanner) readOperator(ch rune) (*Token, *strings.Builder) {
 
 	var op strings.Builder
 	op.WriteRune(ch)
 	op.WriteRune(s.readNext())
 
-	//TODO: replace by peek?
+	//NOTE: peek the rune
 	ch = s.readNext()
 	s.r.UnreadRune()
 
 	opStr := op.String()
-	if (ch == ' ' || ch == 0) && opStr == "EQ" || opStr == "GR" || opStr == "LE" {
-		s.tokens = append(s.tokens, Token{Operator, opStr})
-
-		return true, nil
+	if isWhitespaceOrEOF(ch) && (opStr == "EQ" || opStr == "GR" || opStr == "LE") {
+		return &Token{Operator, opStr}, nil
 	}
 
-	return false, &op
+	return nil, &op
 }
 
-func (s *Scanner) readFilename(b *strings.Builder) {
+func (s *Scanner) readFilename(b *strings.Builder) *Token {
 	if b == nil {
-		b = new(strings.Builder)
+		panic("b *strings.Builder varibale is nil")
 	}
 
-	//TODO: or end of file reached
-	for ch := s.readNext(); ch != ' '; ch = s.readNext() {
+	for ch := s.readNext(); !isWhitespaceOrEOF(ch); ch = s.readNext() {
 		b.WriteRune(ch)
 	}
 
 	s.r.UnreadRune()
-	s.tokens = append(s.tokens, Token{File, b.String()})
-}
-
-//TODO: remove
-func (s *Scanner) PrintTokens() {
-	for _, t := range s.tokens {
-		fmt.Printf("%v\n", t)
-	}
-}
-
-//TODO: remove
-func (s *Scanner) PrintValues() {
-	for _, t := range s.tokens {
-		fmt.Printf("%v", t.Value)
-	}
-	println()
+	return &Token{File, b.String()}
 }

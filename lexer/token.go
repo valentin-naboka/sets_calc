@@ -3,14 +3,13 @@ package lexer
 type TokenType int
 
 const (
-	Error        TokenType = iota
-	LeftBracket            // '['
-	RightBracket           // ']'
-	Whitespace             // ' '
-	Integer                // '[1-9]+'
-	Operator               // 'EQ' | 'GR' | 'LE'
-	File                   // 'file.ext'
-	EOF                    // End of file
+	LeftBracket  TokenType = iota // '['
+	RightBracket                  // ']'
+	Whitespace                    // ' '
+	Integer                       // '[1-9]+'
+	Operator                      // 'EQ' | 'GR' | 'LE'
+	File                          // 'filename'
+	EOF                           // End of file
 )
 
 type Token struct {
