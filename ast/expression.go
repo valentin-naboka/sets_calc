@@ -18,6 +18,7 @@ type Expression struct {
 	Sets   []FileOrExpression
 }
 
+//TODO: remove
 func (e *Expression) Print() {
 	print("[ ")
 	switch e.OpType {
@@ -26,7 +27,7 @@ func (e *Expression) Print() {
 	case LessThan:
 		fmt.Printf("LE")
 	case GreaterThan:
-		fmt.Printf("GE")
+		fmt.Printf("GR")
 	default:
 		panic("Unexpected op type")
 	}

@@ -68,7 +68,7 @@ func (s *Parser) parseExpr() *ast.Expression {
 
 	for token := s.Scanner.PeekNextToken(); token.Type != lexer.RightBracket; token = s.Scanner.PeekNextToken() {
 		if token.Type == lexer.File {
-			expr.Sets = append(expr.Sets, ast.File{token.Value})
+			expr.Sets = append(expr.Sets, ast.File{Name: token.Value})
 			s.Scanner.NextToken()
 		} else if token.Type == lexer.LeftBracket {
 			e := s.parseExpr()
@@ -94,9 +94,6 @@ func (s *Parser) parseInteger(i string) (ast.Int, error) {
 	integer, err := strconv.Atoi(i)
 	return ast.Int(integer), err
 }
-
-// func (s *Parser) parseSets() ast.Int {
-// }
 
 //TODO: use just string
 func (s *Parser) parseOperator(op string) (ast.Operator, error) {

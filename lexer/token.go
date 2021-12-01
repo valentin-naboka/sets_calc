@@ -5,9 +5,9 @@ type TokenType int
 const (
 	Error        TokenType = iota
 	LeftBracket            // '['
-	RightBracket           // '['
+	RightBracket           // ']'
 	Whitespace             // ' '
-	Integer                // '+[1-9]'
+	Integer                // '[1-9]+'
 	Operator               // 'EQ' | 'GR' | 'LE'
 	File                   // 'file.ext'
 	EOF                    // End of file
@@ -18,6 +18,7 @@ type Token struct {
 	Value string
 }
 
+//TODO: remove
 func (t *Token) String() string {
 	return t.Value
 }

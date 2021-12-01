@@ -16,7 +16,7 @@ func (c *Calculator) Execute(expression *ast.Expression) []int {
 	return c.calcExpr(expression)
 }
 
-//TODO: don no use whole array. Use only ranges
+//TODO: don;t use whole array. Use only ranges
 func (c *Calculator) calcExpr(e *ast.Expression) []int {
 	var sets [][]int
 	for _, set := range e.Sets {

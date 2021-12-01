@@ -43,18 +43,6 @@ func (s *Scanner) Scan() /*(t Token)*/ {
 
 	//TODO: resolve
 	for ch := s.readNext(); ch != 0; ch = s.readNext() {
-
-		// // If we see whitespace then consume all contiguous whitespace.
-		// // If we see a letter then consume as an ident or reserved word.
-		// if isWhitespace(ch) {
-		// 	s.unread()
-		// 	return s.scanWhitespace()
-		// } else if isLetter(ch) {
-		// 	s.unread()
-		// 	return s.scanIdent()
-		// }
-
-		//	// Otherwise read the individual character.
 		switch ch {
 		case 0:
 			{
@@ -92,6 +80,7 @@ func (s *Scanner) Scan() /*(t Token)*/ {
 
 		s.readFilename(stringBuilder)
 
+		//TODO: what do to with errors?
 		//s.tokens = append(s.tokens, Token{Error, fmt.Sprintf("unknown symbol %c", ch)})
 	}
 }
@@ -164,12 +153,14 @@ func (s *Scanner) readFilename(b *strings.Builder) {
 	s.tokens = append(s.tokens, Token{File, b.String()})
 }
 
+//TODO: remove
 func (s *Scanner) PrintTokens() {
 	for _, t := range s.tokens {
 		fmt.Printf("%v\n", t)
 	}
 }
 
+//TODO: remove
 func (s *Scanner) PrintValues() {
 	for _, t := range s.tokens {
 		fmt.Printf("%v", t.Value)
