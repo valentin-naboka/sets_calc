@@ -1,4 +1,3 @@
-//[ GR 1 c.txt [ EQ 3 a.txt a.txt b.txt ]
 package lexer
 
 import (
@@ -86,11 +85,11 @@ func (s *Scanner) readDigit(ch rune) (*Token, *strings.Builder) {
 		number.WriteRune(ch)
 	}
 
+	s.r.UnreadRune()
 	if ch != whitespace {
 		return nil, &number
 	}
 
-	s.r.UnreadRune()
 	return &Token{Integer, number.String()}, nil
 }
 

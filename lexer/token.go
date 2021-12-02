@@ -16,8 +16,3 @@ type Token struct {
 	Type  TokenType
 	Value string
 }
-
-//TODO: remove
-func (t *Token) String() string {
-	return t.Value
-}

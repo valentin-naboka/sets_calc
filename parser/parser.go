@@ -19,7 +19,16 @@ func NewParser(s *lexer.Scanner) *Parser {
 }
 
 func (s *Parser) BuildExpression() (*ast.Expression, error) {
-	return s.parseExpr(s.Scanner.NextToken())
+	expr, err := s.parseExpr(s.Scanner.NextToken())
+	if err != nil {
+		return expr, err
+	}
+
+	token := s.Scanner.NextToken()
+	if token.Type != lexer.EOF {
+		return nil, errors.Errorf("unexpected token: '%s' at the end of the expression", token.Value)
+	}
+	return expr, nil
 }
 
 func (s *Parser) parseExpr(token *lexer.Token) (*ast.Expression, error) {
@@ -101,8 +110,15 @@ func (s *Parser) parseOperator(op string) (ast.Operator, error) {
 }
 
 func (s *Parser) parseSets() ([]ast.FileOrExpression, error) {
+	const unexpectedTokenErrStr = "unexpected token '%s': filename or expression statement is expected"
+	token := s.Scanner.NextToken()
+
+	if token.Type == lexer.RightBracket || token.Type == lexer.EOF {
+		return nil, errors.Errorf(unexpectedTokenErrStr, token.Value)
+	}
+
 	var sets []ast.FileOrExpression
-	for token := s.Scanner.NextToken(); token.Type != lexer.RightBracket; token = s.Scanner.NextToken() {
+	for ; token.Type != lexer.RightBracket; token = s.Scanner.NextToken() {
 		if token.Type == lexer.File {
 			sets = append(sets, ast.File{Name: token.Value})
 		} else if token.Type == lexer.LeftBracket {
@@ -115,7 +131,7 @@ func (s *Parser) parseSets() ([]ast.FileOrExpression, error) {
 				sets = append(sets, e)
 			}
 		} else {
-			return nil, errors.Errorf("unexpected token %s: filename or expression statement is expected", token.Value)
+			return nil, errors.Errorf(unexpectedTokenErrStr, token.Value)
 		}
 
 		if s.Scanner.NextToken().Type != lexer.Whitespace {

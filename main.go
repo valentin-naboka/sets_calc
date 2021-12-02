@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"sets_calc/calcengine"
@@ -11,82 +10,105 @@ import (
 )
 
 func main() {
+	input := os.Args[1]
 
-	{
-		r := strings.NewReader("[ GR 1 c.txt [ EQ 3 a.txt a.txt b.txt ] ]")
-		scanner := lexer.NewScanner(r)
+	r := strings.NewReader(input)
 
-		parser := parser.Parser{Scanner: scanner}
-		expr, err := parser.BuildExpression()
-		if err != nil {
-			log.Print(err)
-			os.Exit(1)
-		}
-
-		expr.Print()
-
-		var engine calcengine.Calculator
-
-		result, _ := engine.Execute(expr)
-
-		fmt.Printf("\n%v\n", result)
+	scanner := lexer.NewScanner(r)
+	parser := parser.Parser{Scanner: scanner}
+	expr, err := parser.BuildExpression()
+	if err != nil {
+		log.Print(err)
+		os.Exit(1)
 	}
 
-	{
-		r := strings.NewReader("[ LE 2 a.txt [ GR 1 b.txt c.txt ] ]")
-		scanner := lexer.NewScanner(r)
+	engine := calcengine.NewCalculator(&calcengine.FileReader{})
+	result, err := engine.Execute(expr)
 
-		parser := parser.Parser{Scanner: scanner}
-		expr, err := parser.BuildExpression()
-		if err != nil {
-			log.Print(err)
-			os.Exit(1)
-		}
-
-		expr.Print()
-
-		var engine calcengine.Calculator
-
-		result, _ := engine.Execute(expr)
-
-		fmt.Printf("\n%v\n", result)
+	if err != nil {
+		log.Print(err)
+		os.Exit(1)
 	}
 
-	{
-		r := strings.NewReader("[ GR 1 b.txt c.txt ]")
-		scanner := lexer.NewScanner(r)
-
-		parser := parser.Parser{Scanner: scanner}
-		expr, err := parser.BuildExpression()
-		if err != nil {
-			log.Print(err)
-			os.Exit(1)
-		}
-		expr.Print()
-
-		var engine calcengine.Calculator
-
-		result, _ := engine.Execute(expr)
-
-		fmt.Printf("\n%v\n", result)
+	for _, i := range result {
+		println(i)
 	}
 
-	{
-		r := strings.NewReader("[ LE 2 a.txt ]")
-		scanner := lexer.NewScanner(r)
+	// {
+	// 	r := strings.NewReader("[ GR 1 c.txt [ EQ 3 a.txt a.txt b.txt ] ]")
+	// 	scanner := lexer.NewScanner(r)
 
-		parser := parser.Parser{Scanner: scanner}
-		expr, err := parser.BuildExpression()
-		if err != nil {
-			log.Print(err)
-			os.Exit(1)
-		}
-		expr.Print()
+	// 	parser := parser.Parser{Scanner: scanner}
+	// 	expr, err := parser.BuildExpression()
+	// 	if err != nil {
+	// 		log.Print(err)
+	// 		os.Exit(1)
+	// 	}
 
-		var engine calcengine.Calculator
+	// 	expr.Print()
 
-		result, _ := engine.Execute(expr)
+	// 	engine := calcengine.NewCalculator(&calcengine.FileReader{})
 
-		fmt.Printf("\n%v\n", result)
-	}
+	// 	result, _ := engine.Execute(expr)
+
+	// 	fmt.Printf("\n%v\n", result)
+	// }
+
+	// {
+	// 	r := strings.NewReader("[ LE 2 a.txt [ GR 1 b.txt c.txt ] ]")
+	// 	scanner := lexer.NewScanner(r)
+
+	// 	parser := parser.Parser{Scanner: scanner}
+	// 	expr, err := parser.BuildExpression()
+	// 	if err != nil {
+	// 		log.Print(err)
+	// 		os.Exit(1)
+	// 	}
+
+	// 	expr.Print()
+
+	// 	engine := calcengine.NewCalculator(&calcengine.FileReader{})
+
+	// 	result, _ := engine.Execute(expr)
+
+	// 	fmt.Printf("\n%v\n", result)
+	// }
+
+	// {
+	// 	r := strings.NewReader("[ GR 1 b.txt c.txt ]")
+	// 	scanner := lexer.NewScanner(r)
+
+	// 	parser := parser.Parser{Scanner: scanner}
+	// 	expr, err := parser.BuildExpression()
+	// 	if err != nil {
+	// 		log.Print(err)
+	// 		os.Exit(1)
+	// 	}
+	// 	expr.Print()
+
+	// 	engine := calcengine.NewCalculator(&calcengine.FileReader{})
+
+	// 	result, _ := engine.Execute(expr)
+
+	// 	fmt.Printf("\n%v\n", result)
+	// }
+
+	// {
+	// 	r := strings.NewReader("[ LE 2 a.txt ]")
+	// 	scanner := lexer.NewScanner(r)
+
+	// 	parser := parser.Parser{Scanner: scanner}
+	// 	expr, err := parser.BuildExpression()
+	// 	if err != nil {
+	// 		log.Print(err)
+	// 		os.Exit(1)
+	// 	}
+	// 	expr.Print()
+
+	// 	engine := calcengine.NewCalculator(&calcengine.FileReader{})
+
+	// 	result, _ := engine.Execute(expr)
+
+	// 	fmt.Printf("\n%v\n", result)
+	// }
 }
