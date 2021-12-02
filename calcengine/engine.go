@@ -97,11 +97,12 @@ func (c *Calculator) calculate(n int, predicate func(int, int) bool, sets ...[]i
 	var result []int
 
 	setsWrapper := Sets{data: sets}
+	// NOTE: Sort sets in descending order based on the last element of the set.
+	// I.e, [{1,2,3}, {4,5,6}, {3,4,5}] will be rearanged to [{4,5,6}, {3,4,5}, {1,2,3}]
 	sort.Sort(&setsWrapper)
 
 	for currentSetIdx, currentSet := range setsWrapper.data {
 		for len(setsWrapper.data[currentSetIdx]) != 0 {
-
 			// Remove currentItem (which is the last item in the set) from the slice
 			LastItemIdx := len(currentSet) - 1
 			lastItem := currentSet[LastItemIdx]
