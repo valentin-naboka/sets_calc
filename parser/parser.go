@@ -18,6 +18,8 @@ func NewParser(s *lexer.Scanner) *Parser {
 	return &Parser{Scanner: s}
 }
 
+// NOTE: The big depth of recursion may lead to stack overflow.
+// In such a case, better to replace it with the stack data structure.
 func (s *Parser) BuildExpression() (*ast.Expression, error) {
 	expr, err := s.parseExpr(s.Scanner.NextToken())
 	if err != nil {
