@@ -68,7 +68,7 @@ func (s *Scanner) NextToken() *Token {
 }
 
 func (s *Scanner) readWhitespaces(ch rune) *Token {
-	for ; isWhitespaceOrEOF(ch); ch = s.readNext() {
+	for ; ch == whitespace; ch = s.readNext() {
 	}
 	s.r.UnreadRune()
 	return &Token{Whitespace, string(whitespace)}

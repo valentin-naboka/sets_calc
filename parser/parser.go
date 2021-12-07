@@ -133,6 +133,9 @@ func (s *Parser) parseSets() ([]ast.FileOrExpression, error) {
 				sets = append(sets, e)
 			}
 		} else {
+			if token.Type == lexer.EOF {
+				return nil, errors.Errorf("unexpected end of file")
+			}
 			return nil, errors.Errorf(unexpectedTokenErrStr, token.Value)
 		}
 
