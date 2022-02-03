@@ -1,4 +1,4 @@
-# Sets calculator
+# Sets calculator (test task)
 
 **To build the sources:**
 
